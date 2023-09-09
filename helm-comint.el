@@ -87,8 +87,8 @@ you will not have anymore separators between candidates."
 (defvar helm-comint-prompts-keymap
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
-    (define-key map (kbd "C-c o")   #'helm-comint-prompts-other-window)
-    (define-key map (kbd "C-c C-o") #'helm-comint-prompts-other-frame)
+    (define-key map (kbd "C-c C-o")   #'helm-comint-prompts-other-window)
+    (define-key map (kbd "C-c C-f") #'helm-comint-prompts-other-frame)
     map)
   "Keymap for `helm-comint-prompt-all'.")
 
