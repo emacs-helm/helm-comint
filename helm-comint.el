@@ -1,6 +1,13 @@
-;;; helm-comint.el --- Comint prompt navigation for helm. -*- lexical-binding: t -*-
+;;; helm-comint.el --- Comint prompt navigation for helm -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2020 Pierre Neidhardt <mail@ambrevar.xyz>
+
+;; Author: Pierre Neidhardt <mail@ambrevar.xyz>
+;; Maintainer: Benedict Wang <foss@bhw.name>
+;; Version: 0.0.1
+;; Package-Requires: ((emacs "29.1") (helm "3.9.4"))
+;; Keywords: processes, matching
+;; Homepage: https://github.com/benedicthw/helm-comint.git
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -58,16 +65,16 @@ Derived modes (e.g., Geiser's REPL) are automatically supported."
 (defcustom helm-comint-next-prompt-function '((sly-mrepl-mode . (lambda ()
                                                                   (sly-mrepl-next-prompt)
                                                                   (point))))
-  "Alist of (MODE . NEXT-PROMPT-FUNCTION) to use.
- If the current major mode is a key in this list, the associated
- function will be used to navigate the prompts.
- The function must return the point after the prompt.
- Otherwise (comint-next-prompt 1) will be used."
+ "Alist of (MODE . NEXT-PROMPT-FUNCTION) to use.
+If the current major mode is a key in this list, the associated
+function will be used to navigate the prompts.
+The function must return the point after the prompt.
+Otherwise (comint-next-prompt 1) will be used."
   :group 'helm-comint
   :type '(alist :key-type symbol :value-type function))
 
 (defcustom helm-comint-max-offset 400
-  "Max number of chars displayed per candidate in comint-input-ring browser.
+  "Max number of chars displayed per candidate in `comint-input-ring' browser.
 When t, don't truncate candidate, show all.
 By default it is approximatively the number of bits contained in
 five lines of 80 chars each i.e 80*5.
@@ -115,7 +122,14 @@ See `helm-comint-prompts-list'."
            append (helm-comint-prompts-list mode b)))
 
 (defun helm-comint-prompts-transformer (candidates &optional all)
-  ;; ("ls" 162 "*shell*" 3) => ("*shell*:3:ls" . ("ls" 162 "*shell*" 3))
+  "Transform comint prompts CANDIDATES.
+
+Include prompt number if `helm-comint-prompts-promptidx-p' is
+TRUE. When ALL is TRUE, all candidates are transformed. See
+`helm-comint-prompts-list-all'.
+
+E.g. (\"ls\" 162 \"*shell*\" 3) =>
+     (\"*shell*:3:ls\" . (\"ls\" 162 \"*shell*\" 3))"
   (cl-loop for (prt pos buf id) in candidates
            collect `(,(concat
                        (when all
@@ -132,10 +146,14 @@ See `helm-comint-prompts-list'."
                       . ,(list prt pos buf id))))
 
 (defun helm-comint-prompts-all-transformer (candidates)
+  "Tranform all comint prompt CANDIDATES."
   (helm-comint-prompts-transformer candidates t))
 
 (cl-defun helm-comint-prompts-goto (candidate &optional (action 'switch-to-buffer))
-  ;; Candidate format: ("ls" 162 "*shell*" 3)
+  "Switch the active buffer to the selected comint prompt.
+
+CANDIDATE format: (\"ls\" 162 \"*shell*\" 3)
+ACTION specifies if we should goto the other window or frame."
   (let ((buf (nth 2 candidate)))
     (unless (and (string= (buffer-name) buf)
                  (eq action 'switch-to-buffer))
@@ -144,9 +162,11 @@ See `helm-comint-prompts-list'."
     (recenter)))
 
 (defun helm-comint-prompts-goto-other-window (candidate)
+  "Goto comint prompt CANDIDATE in other window."
   (helm-comint-prompts-goto candidate 'switch-to-buffer-other-window))
 
 (defun helm-comint-prompts-goto-other-frame (candidate)
+  "Goto comint prompt CANDIDATE in other frame."
   (helm-comint-prompts-goto candidate 'switch-to-buffer-other-frame))
 
 (helm-make-command-from-action helm-comint-prompts-other-window
@@ -192,7 +212,8 @@ See `helm-comint-prompts-list'."
 ;;
 ;;
 (defun helm-comint-input-ring-action (candidate)
-  "Default action for comint history."
+  "Paste selected comint prompt CANDIDATE as the next comint prompt.
+Default action for comint history."
   (with-helm-current-buffer
     (delete-region (comint-line-beginning-position) (point-max))
     (insert candidate)))
