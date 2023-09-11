@@ -218,7 +218,7 @@ Default action for comint history."
     (delete-region (comint-line-beginning-position) (point-max))
     (insert candidate)))
 
-(defvar helm-source-comint-input-ring
+(defvar helm-comint-input-ring
   (helm-build-sync-source "Comint history"
     :candidates (lambda ()
                   (with-helm-current-buffer
